@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title>时辰八字五行分析</title>
+		<style>
+
+			
+			em {
+				color: #f00;
+				font-weight: bold;
+			}
+			select {
+				width: 60px;
+			}
+			select, button {
+				height: 35px;
+				margin: 0px 5px;
+			}
+			div#ask {
+				text-align: center;
+			}
+			div#result, div#ask {
+				margin-top: 10px;
+		
+			}
+			table {
+				text-align: center;
+				font-size: 16px;
+				border: slateblue solid;
+				border-width: 0px 1px 1px 0px;
+				margin-left:auto; 
+				margin-right:auto;
+				
+			}
+			table tr {
+				height: 30px;
+				line-height: 30px;
+			}
+			table td, table th{
+				width: 90px;
+				border: slateblue solid;
+				border-width: 1px 0px 0px 1px;
+			}
+			table th {
+				width: 100px;
+			}
+		</style>
+		<script type="text/javascript" src="js/jquery-2.1.4.min.js"></script>
+		<script type="text/javascript" src="js/calendar.js"></script>
+		<script type="text/javascript" src="js/wuxing.js"></script>
+		<script type="text/javascript">
+			var chinaTime = ['子','丑','丑','寅','寅','卯','卯','辰','辰','巳','巳','午','午','未','未','申','申','酉','酉','戌','戌','亥','亥','子'],
+				chinaMonth = ['正月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','腊月'],
+				chinaDate = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+			$(function() {
+				initDateSelect();
+				
+				$("#type").on("change", function(){
+					if(this.value == '0') {
+						$("#nongli").hide();
+						$("#gongli").css("display", "inline-block");
+					}else{
+						$("#nongli").css("display", "inline-block");
+						$("#gongli").hide();
+					}
+				});
+				
+				$("#go").on("click", function(){
+					var year = month = date = -1;
+					var type = $("#type").val();
+					var lunar;
+					year = Number($("#year").val());
+					//公历
+					if(type == '0') {
+						month = Number($("#ylMonth").val());
+						date = Number($("#ylDate").val());
+						lunar = calendar.solar2lunar(year, month, date);
+					}else{
+						month = Number($("#glMonth").val());
+						date = Number($("#glDate").val());
+						lunar = calendar.lunar2solar(year, month, date);
+					}
+					lunar.hour = $("#hour").val();
+//					console.log(lunar);
+					var result = WanNianLi.getResult(lunar);
+//					console.log(result);
+					$("#cYear").html(lunar.cYear + '年');
+					$("#cMonth").html(lunar.cMonth + '月');
+					$("#cDay").html(lunar.cDay + '日');
+					$("#cHour").html(lunar.hour + '时');
+					
+					$("#lYear").html(lunar.gzYear+ '年');
+					$("#lMonth").html(lunar.IMonthCn);
+					$("#lDay").html(lunar.IDayCn);
+					$("#lHour").html(result.bazi.hour.slice(1,2) + '时');
+					
+					$("#bYear").html(result.bazi.year);
+					$("#bMonth").html(result.bazi.month);
+					$("#bDay").html(result.bazi.date);
+					$("#bHour").html(result.bazi.hour);
+					
+					$("#wYear").html(result.wuxing.year);
+					$("#wMonth").html(result.wuxing.month);
+					$("#wDay").html(result.wuxing.date);
+					$("#wHour").html(result.wuxing.hour);
+					
+					var msg = msg1 = '';
+					[].forEach.call(Object.keys(result.wuxingResult), function(value, index){
+						if(result.wuxingResult[value] === 0) {
+							msg += '<em>' + value + ': ' + result.wuxingResult[value] + '</em>' + ', ';
+							!msg1 && (msg1 = '<br/>五行缺：');
+							msg1 += value + ', ';
+						}else{
+							msg += value + ': ' + result.wuxingResult[value] + ', ';
+						}
+					});
+					msg = msg.slice(0, msg.length-2);
+					if(msg1.length > 2) {
+						msg1 = msg1.slice(0, msg1.length-2);
+					}
+					$("#info").html("五行：" + msg + msg1);
+					
+					$("#result").show();
+				});
+			});
+			function initDateSelect(){
+				var i= len = 0, d = new Date();
+				var lunar = calendar.solar2lunar(d.getFullYear(), d.getMonth() + 1, d.getDate());
+				
+				//年份
+				for(i = 1950; i <= 2020; i++) {
+					$("#year").append("<option value='" + i + "'>" + i + "</option>");
+				}
+				$("#year option[value=" + d.getFullYear() + "]").attr("selected", "selected");
+				
+				//公历月
+				for(i = 1; i <= 12; i++) {
+					$("#ylMonth").append("<option value='" + i + "'>" + i + "</option>");
+				}
+				$("#ylMonth option[value=" + (d.getMonth() + 1) + "]").attr("selected", "selected");
+				
+				//公历天
+				for(i = 1; i <= 31; i++) {
+					$("#ylDate").append("<option value='" + i + "'>" + i + "</option>");
+				}
+				$("#ylDate option[value=" + d.getDate() + "]").attr("selected", "selected");
+				
+				//时辰
+				for(i = 00; i <= 23; i++) {
+					$("#hour").append("<option value='" + i + "'>" + chinaTime[i] + ' ' + i + "</option>");
+				}
+				$("#hour option[value=" + d.getHours() + "]").attr("selected", "selected");
+				
+				//农历月
+				for(i = 0, len = chinaMonth.length; i < len; i++){
+					$("#glMonth").append("<option value='" + (i+1) + "'>" + chinaMonth[i] + "</option>");
+				}
+				$("#glMonth option[value=" + (lunar.lMonth) + "]").attr("selected", "selected");
+				
+				//农历天
+				for(i = 0, len = chinaDate.length; i < len; i++){
+					$("#glDate").append("<option value='" + (i+1) + "'>" + chinaDate[i] + "</option>");
+				}
+				$("#glDate option[value=" + (lunar.lDay) + "]").attr("selected", "selected");
+			}
+		</script>
+	</head>
+
+	<body>
+		<div id="ask">
+			<select id="type">
+				<option value="0" selected="selected">公历</option>
+				<option value="1">农历</option>
+			</select>
+			<select id="year"></select>年
+			<div id="gongli" style="display: inline-block;">
+				<select id="ylMonth"></select>月
+				<select id="ylDate"></select>日
+			</div>
+			<div id="nongli" style="display: none;">
+				<select id="glMonth"></select>
+				<select id="glDate"></select>
+			</div>
+			<select id="hour"></select>时
+			<button id="go">查询五行八字</button>
+		</div>
+		<div id="result" style="display: none;">
+			<table cellpadding="0" cellspacing="0">
+				<tr>
+					<th>生日(公历)</th>
+					<td id="cYear"></td>
+					<td id="cMonth"></td>
+					<td id="cDay"></td>
+					<td id="cHour"></td>
+				</tr>
+				<tr>
+					<th>生日(农历)</th>
+					<td id="lYear"></td>
+					<td id="lMonth"></td>
+					<td id="lDay"></td>
+					<td id="lHour"></td>
+				</tr>
+				<tr>
+					<th>八字</th>
+					<td id="bYear"></td>
+					<td id="bMonth"></td>
+					<td id="bDay"></td>
+					<td id="bHour"></td>
+				</tr>
+				<tr>
+					<th>五行</th>
+					<td id="wYear"></td>
+					<td id="wMonth"></td>
+					<td id="wDay"></td>
+					<td id="wHour"></td>
+				</tr>
+				<tr style="height: 60px;">
+					<th>分析</th>
+					<td id="info" colspan="4"></td>
+				</tr>
+			</table>
+		</div>
+	</body>
+
+</html>
+    
+ 
